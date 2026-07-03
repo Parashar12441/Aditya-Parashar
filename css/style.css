@@ -6,6 +6,10 @@
    ============================================================ */
 
 :root {
+  /* Core Colors */
+  --color-white: 255 255 255;
+  --color-black: 0 0 0;
+
   /* Background */
   --bg-void: #050505;
   --bg-base: #0a0a0b;
@@ -59,6 +63,7 @@
 html {
   scroll-behavior: smooth;
   background: var(--bg-void);
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -95,22 +100,11 @@ body {
   color: #fff;
 }
 
-/* Scrollbar */
+/* Scrollbar (Hidden for cinematic effect) */
 ::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-void);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--glass-border-strong);
-  border-radius: 8px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-blue);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Focus visibility */
@@ -323,13 +317,14 @@ body.custom-cursor-enabled * {
   cursor: none !important;
 }
 
+
 .cursor-dot,
 .cursor-ring {
   position: fixed;
   top: 0;
   left: 0;
   pointer-events: none;
-  z-index: 999;
+  z-index: 2147483647;
   border-radius: 50%;
   transform: translate(-50%, -50%);
 }
@@ -404,7 +399,7 @@ body.custom-cursor-enabled * {
   position: absolute;
   pointer-events: none;
   white-space: nowrap;
-  color: white;
+  color: var(--text-primary);
   z-index: 1;
   transition: none !important;
 }
@@ -538,9 +533,11 @@ nav ul.hidden.md\:flex *,
   pointer-events: none;
 }
 
+
 .nav-link,
 .tech-tag,
-#heroSocials a {
+#heroSocials a,
+.auto-slide-link {
   position: relative;
   z-index: 10;
   display: inline-flex;
@@ -953,41 +950,65 @@ nav ul.hidden.md\:flex *,
    LIGHT MODE (THEME TOGGLE)
    ============================================================ */
 /* Fast, smooth transitions for the theme toggle */
-html, body, img, video, canvas, .keep-colors, #heroPhotoCard {
-  transition: filter 0.25s var(--ease-out), background-color 0.25s var(--ease-out), color 0.25s var(--ease-out);
+html, body, .glass, .glass-strong, .glass-card, .btn-magnetic {
+  transition: background-color 0.4s var(--ease-out), color 0.4s var(--ease-out), border-color 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
 }
 
 html[data-theme="light"] {
-  filter: invert(1) hue-rotate(180deg);
-}
+  /* Core Colors (Inverted logic for Tailwind) */
+  --color-white: 17 24 39; /* text-white becomes dark gray */
+  --color-black: 255 255 255; /* bg-black becomes white */
 
-/* Prevent double-inverting the background of the body */
-html[data-theme="light"] body {
-  background-color: #050505; 
-}
+  /* Background */
+  --bg-void: #f9fafb;
+  --bg-base: #f3f4f6;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
 
-/* Revert media elements so they retain original colors */
-html[data-theme="light"] img,
-html[data-theme="light"] video,
-html[data-theme="light"] canvas,
-html[data-theme="light"] .keep-colors {
-  filter: invert(1) hue-rotate(180deg);
+  /* Glass - dark-tinted transparency */
+  --glass-bg: rgba(0, 0, 0, 0.035);
+  --glass-bg-strong: rgba(0, 0, 0, 0.06);
+  --glass-border: rgba(0, 0, 0, 0.09);
+  --glass-border-strong: rgba(0, 0, 0, 0.16);
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+
+  /* Accents - slightly darkened for better contrast on light bg */
+  --accent-blue-soft: rgba(79, 124, 255, 0.12);
+  --accent-emerald-soft: rgba(52, 211, 153, 0.12);
+  --accent-purple-soft: rgba(139, 124, 246, 0.12);
+  --accent-gold-soft: rgba(212, 175, 55, 0.12);
+
+  /* Cinematic gradients & glows */
+  --gradient-aurora: radial-gradient(60% 60% at 50% 0%, rgba(79, 124, 255, 0.15), transparent 70%),
+    radial-gradient(50% 50% at 85% 20%, rgba(139, 124, 246, 0.12), transparent 70%),
+    radial-gradient(50% 50% at 10% 30%, rgba(34, 211, 238, 0.1), transparent 70%);
+  --gradient-text: linear-gradient(120deg, #111827, rgba(79, 124, 255, 0.9) 60%, rgba(139, 124, 246, 0.85));
+  --shadow-glow: 0 0 60px -12px rgba(79, 124, 255, 0.2);
+  --shadow-elegant: 0 12px 40px -12px rgba(0, 0, 0, 0.1);
 }
 
 /* Light mode specific tweaks */
 html[data-theme="light"] .glass,
 html[data-theme="light"] .glass-strong,
 html[data-theme="light"] .glass-card {
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
-/* Keep hero photo card in dark mode */
-html[data-theme="light"] #heroPhotoCard {
-  filter: invert(1) hue-rotate(180deg) !important;
+html[data-theme="light"] .glass::after,
+html[data-theme="light"] .glass-strong::after,
+html[data-theme="light"] .glass-card::after,
+html[data-theme="light"] .stat-card::after,
+html[data-theme="light"] .cta-card::after,
+html[data-theme="light"] .role-pill::after {
+  background: radial-gradient(180px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(0, 0, 0, 0.15), transparent 80%);
 }
-
-/* Prevent double inversion on the image inside the hero card. 
-   Restore Tailwind's filter variable structure. */
-html[data-theme="light"] #heroFrameImg {
-  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow) !important;
+/* Auto-slide-link padding offset for text links so the droplet doesn't suffocate the text */
+a.auto-slide-link:not(.btn-magnetic):not(.nav-link):not(.px-3):not(.px-4):not(.px-5):not(.px-6):not(.px-7) {
+  padding: 0.35rem 0.75rem;
+  margin: -0.35rem -0.75rem;
+  border-radius: 99px;
 }

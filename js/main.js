@@ -80,7 +80,7 @@ function renderAbout() {
     focusEl.innerHTML = D.about.focusAreas.map(f => `
       <div class="glass-card rounded-2xl p-5">
         <h4 class="font-display text-base mb-1.5">${f.title}</h4>
-        <p class="text-sm text-white/45 leading-relaxed">${f.detail}</p>
+        <p class="text-sm text-white/70 leading-relaxed">${f.detail}</p>
       </div>
     `).join("");
   }
@@ -117,40 +117,176 @@ const ACCENT_ICON = { blue: "radar", emerald: "cpu", purple: "hotel", gold: "tra
 function renderProjects() {
   const projEl = document.getElementById("projectsGrid");
   if (!projEl) return;
+  
+  // Remove the grid classes to allow a vertical list
+  projEl.classList.remove("grid", "md:grid-cols-2", "gap-6");
+  projEl.classList.add("flex", "flex-col");
+
   projEl.innerHTML = D.projects.map(p => `
-    <article class="glass-card rounded-3xl p-7 sm:p-8 reveal-up flex flex-col" id="project-${p.id}">
-      <div class="flex items-start justify-between mb-6">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-accent-${p.accent} border border-accent-${p.accent}">
-          <i data-lucide="${ACCENT_ICON[p.accent] || 'box'}" class="w-5 h-5 accent-${p.accent}"></i>
+    <div class="project-list-item group relative py-8 md:py-12 border-b border-white/5 cursor-pointer" onclick="openImmersiveProject('${p.id}')">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="relative z-10">
+          <p class="font-mono text-xs text-accent-${p.accent} mb-3 transition-transform duration-500 ease-out group-hover:translate-x-3">${p.period} — ${p.category}</p>
+          <h3 class="font-display text-5xl md:text-7xl lg:text-8xl text-white/30 group-hover:text-white transition-all duration-500 ease-out group-hover:translate-x-6 tracking-tight">${p.title}</h3>
         </div>
-        <div class="flex flex-col items-end gap-1.5">
-          <span class="font-mono text-[10px] tracking-widest uppercase text-white/60 border border-white/10 rounded-full px-2.5 py-1">${p.status}</span>
-          ${p.badge ? `
-            <span class="inline-flex items-center gap-1.5 font-mono text-[9px] tracking-widest uppercase rounded-full px-2.5 py-0.5 ${p.badge.type === 'gold' ? 'text-amber-400 border border-amber-400/20 bg-amber-400/5' : 'text-slate-300 border border-slate-300/20 bg-slate-300/5'}">
-              <i data-lucide="${p.badge.icon}" class="w-3 h-3"></i>
-              ${p.badge.text}
-            </span>
-          ` : ''}
+        <div class="opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out -translate-x-8 group-hover:translate-x-0 flex items-center gap-3 text-white/60 relative z-10">
+          <span class="font-mono text-sm tracking-widest uppercase">View Project</span>
+          <i data-lucide="arrow-right" class="w-6 h-6"></i>
         </div>
       </div>
-      <p class="font-mono text-xs text-white/60 mb-2">${p.period} · ${p.category}</p>
-      <h3 class="font-display text-2xl text-white mb-1.5">${p.title}</h3>
-      <p class="text-sm accent-${p.accent} mb-4">${p.subtitle}</p>
-      <p class="text-sm text-white/75 leading-relaxed mb-5">${p.description}</p>
-      <ul class="space-y-1.5 mb-6">
-        ${p.points.map(pt => `<li class="text-xs text-white/60 leading-relaxed flex gap-2"><span class="text-white/20 mt-0.5">▹</span><span>${pt}</span></li>`).join("")}
-      </ul>
-      <div class="tech-stack-container mt-auto flex flex-wrap gap-2 pt-4 border-t border-white/5 relative">
-        ${p.tech.map(t => `<span class="tech-tag text-[11px] font-mono text-white/70 rounded-full px-2.5 py-1 relative z-10">${t}</span>`).join("")}
-      </div>
-    </article>
+      <!-- Hover Background Glow -->
+      <div class="absolute inset-0 bg-gradient-to-r from-accent-${p.accent}/0 via-accent-${p.accent}/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+    </div>
   `).join("");
 }
+
+window.openImmersiveProject = function(projectId) {
+  const project = D.projects.find(p => p.id === projectId);
+  if (!project) return;
+
+  const hasMedia = project.media && (project.media.video || project.media.image);
+
+  // 1. Create Immersive Viewer HTML
+  const viewerHtml = `
+    <div id="immersiveViewer" class="fixed inset-0 z-[9999999] flex flex-col pointer-events-auto" style="opacity: 0; backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px);">
+      <!-- Deep glass background -->
+      <div class="absolute inset-0 bg-black/60"></div>
+      
+      <!-- Close Button -->
+      <button id="closeImmersive" class="absolute top-8 right-8 z-50 w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors btn-magnetic" style="opacity: 0; transform: scale(0.8);">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Content Container -->
+      <div class="relative z-10 flex-1 flex flex-col md:flex-row overflow-hidden h-full">
+        
+        ${hasMedia ? `
+        <!-- Media Side -->
+        <div class="w-full md:w-3/5 h-[40vh] md:h-full relative flex items-center justify-center p-6 md:p-12 lg:p-16">
+          <div id="immersiveMedia" class="w-full h-full rounded-3xl overflow-hidden relative shadow-2xl border border-white/10 bg-white/5" style="opacity: 0; transform: translateY(40px) scale(0.95);">
+            ${project.media.video ? 
+              `<video src="${project.media.video}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>` : 
+              `<img src="${project.media.image}" class="w-full h-full object-cover" />`
+            }
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Info Side -->
+        <div class="w-full ${hasMedia ? 'md:w-2/5 h-[60vh] md:h-full overflow-y-auto' : 'h-full overflow-y-auto flex-1 items-center md:items-start text-center md:text-left mx-auto max-w-5xl'} flex flex-col justify-start md:justify-center p-6 md:p-12 lg:p-16 bg-gradient-to-t md:bg-gradient-to-l from-black/80 to-transparent">
+          <div id="immersiveInfo" style="opacity: 0; transform: translateY(30px);" class="${!hasMedia ? 'w-full' : ''}">
+            <div class="flex flex-wrap items-center ${!hasMedia ? 'justify-center md:justify-start' : ''} gap-3 mb-6">
+              <span class="font-mono text-xs tracking-widest uppercase text-white/60 border border-white/10 rounded-full px-3 py-1.5">${project.status}</span>
+              ${project.badge ? `<span class="font-mono text-xs tracking-widest uppercase text-amber-400 border border-amber-400/20 bg-amber-400/5 rounded-full px-3 py-1.5 flex items-center gap-2"><i data-lucide="${project.badge.icon}" class="w-3.5 h-3.5"></i>${project.badge.text}</span>` : ''}
+            </div>
+            
+            <p class="font-mono text-sm text-accent-${project.accent} mb-3">${project.period} — ${project.category}</p>
+            <h2 class="font-display text-5xl lg:text-7xl text-white mb-4 tracking-tight leading-none">${project.title}</h2>
+            <p class="text-xl text-white/80 mb-8 font-light">${project.subtitle}</p>
+            
+            <p class="text-base text-white/60 leading-relaxed mb-10 max-w-lg">${project.description}</p>
+            
+            <h4 class="font-mono text-xs tracking-widest text-white/40 uppercase mb-4">Tech Stack</h4>
+            <div id="immersiveTech" class="flex flex-wrap ${!hasMedia ? 'justify-center md:justify-start' : ''} gap-2">
+              ${project.tech.map(t => `<span class="immersive-tech-tag inline-block font-mono text-xs text-white/80 border border-white/10 bg-white/5 rounded-full px-3 py-1.5" style="opacity: 0; transform: translateY(10px);">${t}</span>`).join("")}
+            </div>
+
+            <div class="flex flex-wrap ${!hasMedia ? 'justify-center md:justify-start' : ''} gap-4 mt-12" id="immersiveLinks" style="opacity: 0;">
+              ${project.links && project.links.github ? `<a href="${project.links.github}" target="_blank" class="glass-card rounded-full px-6 py-3 text-sm text-white hover:text-white transition-colors flex items-center gap-2"><i data-lucide="github" class="w-4 h-4"></i> View Source</a>` : ''}
+              ${project.links && project.links.demo ? `<a href="${project.links.demo}" target="_blank" class="glass-strong rounded-full px-6 py-3 text-sm text-accent-${project.accent} hover:text-white transition-colors flex items-center gap-2"><i data-lucide="external-link" class="w-4 h-4"></i> Live Demo</a>` : ''}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', viewerHtml);
+  lucide.createIcons();
+
+  const viewer = document.getElementById("immersiveViewer");
+  const closeBtn = document.getElementById("closeImmersive");
+  
+  if (typeof initMagnetic === 'function') {
+    setTimeout(initMagnetic, 100);
+  }
+
+  // Prevent background scrolling
+  document.body.style.overflow = "hidden";
+
+  // GSAP Timeline
+  const tl = gsap.timeline();
+
+  // 1. Viewer Background & Blur
+  tl.to(viewer, {
+    opacity: 1,
+    duration: 0.5,
+    ease: "power2.out",
+    onUpdate: function() {
+      const progress = this.progress();
+      viewer.style.backdropFilter = `blur(${progress * 40}px)`;
+      viewer.style.webkitBackdropFilter = `blur(${progress * 40}px)`;
+    }
+  });
+
+  if (hasMedia) {
+    // 2. Media Image/Video scale up
+    tl.to("#immersiveMedia", {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.8,
+      ease: "power3.out"
+    }, "-=0.2");
+  }
+
+  // 3. Info text slide up
+  tl.to("#immersiveInfo", {
+    opacity: 1,
+    y: 0,
+    duration: 0.6,
+    ease: "power2.out"
+  }, "-=0.6");
+
+  // 4. Tech stack stagger
+  tl.to(".immersive-tech-tag", {
+    opacity: 1,
+    y: 0,
+    duration: 0.4,
+    stagger: 0.05,
+    ease: "back.out(1.5)"
+  }, "-=0.3");
+
+  // 5. Links fade in and button reveal
+  tl.to("#immersiveLinks", {
+    opacity: 1,
+    duration: 0.4,
+    ease: "power2.out"
+  }, "-=0.2");
+  
+  tl.to(closeBtn, {
+    opacity: 1,
+    scale: 1,
+    duration: 0.4,
+    ease: "back.out(1.5)"
+  }, "-=0.4");
+
+  // Close logic
+  const closeViewer = () => {
+    tl.reverse().then(() => {
+      viewer.remove();
+      document.body.style.overflow = "";
+    });
+  };
+
+  closeBtn.addEventListener("click", closeViewer);
+};
 
 function renderSkills() {
   const skillsEl = document.getElementById("skillsPanel");
   if (!skillsEl) return;
-  
+
   const groups = [
     { title: "Languages", items: D.skills.languages },
     { title: "Frameworks & Libraries", items: D.skills.frameworks },
@@ -211,14 +347,14 @@ async function renderGithubWidgets() {
   if (!wrapper) return;
   const u = D.integrations.githubUsername;
   const container = document.getElementById("githubWidgets");
-  
+
   container.innerHTML = `<p class="text-sm text-white/30 font-mono">Fetching GitHub data…</p>`;
-  
+
   try {
     const res = await fetch(`https://api.github.com/users/${u}`);
     if (!res.ok) throw new Error("bad response");
     const data = await res.json();
-    
+
     container.innerHTML = `
       <div class="glass-card rounded-3xl p-8 flex flex-col justify-center min-h-[280px]">
         <div class="flex items-start gap-4 mb-6">
@@ -309,7 +445,7 @@ function renderLeetcodeStats(container, stats, username) {
     <div class="space-y-4">
       ${bars.map(b => `
         <div>
-          <div class="flex justify-between text-xs font-mono text-white/45 mb-1.5">
+          <div class="flex justify-between text-xs font-mono text-white/70 mb-1.5">
             <span>${b.label}</span>
             <span>${b.solved} / ${b.total}</span>
           </div>
@@ -494,13 +630,54 @@ function renderStartup() {
     `;
   }
 
-  // Website URL Button
+  // Website URL Preview
   if (D.startup.website_url && D.startup.website_url !== '#') {
+    let shortUrl = D.startup.website_url.replace(/^https?:\/\//, '');
     html += `
-      <div class="mt-8" data-reveal>
-        <a href="${D.startup.website_url}" target="_blank" class="btn-magnetic glow-primary inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium text-white" style="background: var(--accent-blue);">
-          Visit Website <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
-        </a>
+      <div class="mt-12 mb-8 glass rounded-3xl p-1.5 relative overflow-hidden group shadow-2xl shadow-black/50" data-reveal>
+        <!-- Desktop Window Decor -->
+        <div class="bg-[#1a1a1a]/80 backdrop-blur-md px-4 py-3 border-b border-white/5 flex items-center justify-between rounded-t-2xl">
+          <div class="flex gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+          </div>
+          <div class="text-xs font-mono text-white/40 bg-white/5 px-4 py-1.5 rounded-full truncate max-w-xs text-center border border-white/5">
+            ${shortUrl}
+          </div>
+          <a href="${D.startup.website_url}" target="_blank" class="text-xs text-accent-blue hover:text-white transition-colors flex items-center gap-1.5" title="Open in new tab">
+            Open <i data-lucide="external-link" class="w-3 h-3"></i>
+          </a>
+        </div>
+        
+        <!-- iFrame Container -->
+        <div class="w-full relative rounded-b-2xl overflow-hidden bg-[#0a0a0a]">
+          <div class="relative w-full aspect-video">
+            <!-- Loading state -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="flex flex-col items-center gap-3">
+                <i data-lucide="loader-2" class="w-6 h-6 text-accent-blue animate-spin"></i>
+                <span class="text-xs font-mono tracking-widest text-white/30 uppercase">Connecting</span>
+              </div>
+            </div>
+            
+            <iframe 
+              src="${D.startup.website_url}" 
+              title="Safe Yatra Live Preview"
+              class="absolute top-0 left-0 border-0 opacity-0 transition-opacity duration-1000 z-10"
+              style="width: 200%; height: 200%; transform: scale(0.5); transform-origin: 0 0;"
+              onload="this.style.opacity='1'"
+              sandbox="allow-scripts allow-same-origin"
+            ></iframe>
+            
+            <!-- Hover Overlay Gradient & Magnetic Button -->
+            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center pb-8 z-20">
+              <a href="${D.startup.website_url}" target="_blank" class="btn-magnetic inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-medium text-white shadow-xl shadow-black/50 pointer-events-auto hover:scale-105 transition-transform" style="background: var(--accent-blue);">
+                Explore Interactive Site <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -551,12 +728,12 @@ function renderHomeResearchStartup() {
   const startupTagline = document.getElementById("homeStartupTagline");
   const researchCount = document.getElementById("homeResearchCount");
   const researchFeatured = document.getElementById("homeResearchFeatured");
-  
+
   if (startupTitle && D.startup && D.startup.name) {
     startupTitle.textContent = D.startup.name;
     startupTagline.textContent = D.startup.tagline || '';
   }
-  
+
   if (researchCount && D.research) {
     if (D.research.length > 0) {
       researchCount.textContent = `${D.research.length} works & papers`;
@@ -623,7 +800,7 @@ function initPreloader() {
 function initCursor() {
   if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
   document.body.classList.add("custom-cursor-enabled");
-  
+
   // Wrap logo text to prevent the CSS mask from disabling pointer events on the hit area
   document.querySelectorAll(".logo-container").forEach(logo => {
     if (logo.querySelector(".logo-text-wrapper")) return;
@@ -658,7 +835,7 @@ function initCursor() {
         const rect = logo.getBoundingClientRect();
         const dx = rect.left - rx;
         const dy = rect.top - ry;
-        
+
         const maskX = rx - rect.left;
         const maskY = ry - rect.top;
         logo.style.setProperty('--mask-x', maskX + 'px');
@@ -681,11 +858,11 @@ function initCursor() {
         el.classList.add("is-magnified");
         ring.classList.add("is-magnifier");
         dot.classList.add("is-hidden");
-        
+
         if (clone) {
           clone.remove();
         }
-        
+
         clone = el.cloneNode(true);
         clone.classList.add("magnified-logo");
         clone.classList.remove("logo-container", "group", "is-magnified");
@@ -716,15 +893,17 @@ function initCursor() {
 
 function initMagnetic() {
   if (prefersReducedMotion) return;
-  document.querySelectorAll(".btn-magnetic").forEach(btn => {
+  document.querySelectorAll(".btn-magnetic, #radarIndicator").forEach(btn => {
     btn.addEventListener("mousemove", (e) => {
       const r = btn.getBoundingClientRect();
       const x = e.clientX - r.left - r.width / 2;
       const y = e.clientY - r.top - r.height / 2;
-      gsap.to(btn, { x: x * 0.25, y: y * 0.35, duration: 0.4, ease: "power2.out" });
+      // Increased sensitivity (from 0.25/0.35 to 0.7) and speed (duration 0.2)
+      gsap.to(btn, { x: x * 0.7, y: y * 0.7, duration: 0.2, ease: "power2.out" });
     });
     btn.addEventListener("mouseleave", () => {
-      gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.4)" });
+      // More elastic snap-back
+      gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: "elastic.out(1.2, 0.3)" });
     });
   });
 }
@@ -842,8 +1021,44 @@ function startRevealAnimations() {
 
   // Hero entrance
   const heroTl = gsap.timeline({ delay: 0.1 });
+
+  // Set initial 3D state for photo wrapper
+  const photoWrapper = document.getElementById("heroPhotoWrapper");
+  if (photoWrapper) {
+    // Start way below the screen, scaled down, and spun around twice (720 deg)
+    gsap.set(photoWrapper, { opacity: 0, y: window.innerHeight + 200, rotateX: 0, rotateY: 720, scale: 0.5, transformPerspective: 1200 });
+
+    // Add to timeline
+    heroTl.to(photoWrapper, {
+      opacity: 1,
+      y: 0,
+      rotateX: 0,
+      rotateY: 0,
+      scale: 1,
+      duration: 3.5, // slower duration for majestic rise & spin
+      ease: "power3.out",
+      onUpdate: function () {
+        const rotY = gsap.getProperty(photoWrapper, "rotateY");
+        const normalized = (rotY % 360 + 360) % 360;
+        const isBack = normalized > 90 && normalized < 270;
+        const img = document.getElementById("heroFrameImg");
+        const backContent = document.getElementById("heroCardBackContent");
+
+        if (img) img.style.opacity = isBack ? 0 : 1;
+        if (backContent) backContent.style.opacity = isBack ? 1 : 0;
+      },
+      onComplete: function () {
+        const img = document.getElementById("heroFrameImg");
+        const backContent = document.getElementById("heroCardBackContent");
+
+        if (img) img.style.opacity = 1;
+        if (backContent) backContent.style.opacity = 0;
+      }
+    }, 0.1); // Start slightly earlier so it rises as the text appears
+  }
+
   heroTl.to("#heroTagline", { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0)
-        .from("#heroHeadline span", { yPercent: 60, opacity: 0, duration: 0.9, stagger: 0.08, ease: "power4.out" }, 0.1);
+    .from("#heroHeadline span", { yPercent: 60, opacity: 0, duration: 0.9, stagger: 0.08, ease: "power4.out" }, 0.1);
 
   // Only target hero [data-reveal] elements (not section ones)
   if (heroSection) {
@@ -953,7 +1168,7 @@ function initFramePhotoParallax() {
 
   // Set transform perspective on the parent container to enable 3D tilting
   gsap.set(card.parentElement, { perspective: 1000 });
-  
+
   // Set default scale on the card (0.58 of w-96 is ~w-56) with top-right origin to stay in corner
   gsap.set(card, {
     scale: 0.58,
@@ -973,7 +1188,7 @@ function initFramePhotoParallax() {
     const rect = card.getBoundingClientRect();
     const x = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2); // -1 to 1
     const y = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2); // -1 to 1
-    
+
     // Scale up to 1.0 (natural size = 100% sharp/crisp) and tilt in 3D
     gsap.to(card, {
       scale: 1.0,
@@ -1070,18 +1285,20 @@ function initGlassCursorGlow() {
 
 function createSlidingIndicators(containerSelector, itemSelector, options = {}) {
   const containers = document.querySelectorAll(containerSelector);
-  
+
   containers.forEach(container => {
     container.style.position = 'relative';
-    
+
     const indicator = document.createElement('div');
     indicator.className = 'sliding-indicator';
     container.appendChild(indicator);
-    
+
     const items = container.querySelectorAll(itemSelector);
     if (items.length === 0) return;
-    
+
     let activeItem = null;
+    const jiggleState = { scale: 1, rotation: 0 };
+
     if (options.matchPath) {
       let currentPath = window.location.pathname.split('/').pop();
       if (currentPath === '' || currentPath === '/') currentPath = 'index.html';
@@ -1095,14 +1312,14 @@ function createSlidingIndicators(containerSelector, itemSelector, options = {}) 
       activeItem = items[options.defaultIndex];
       activeItem.classList.add('is-active');
     }
-    
+
     // Physics State Variables
     let cx = 0, cy = 0, cw = 0, ch = 0; // Current
     let vx = 0, vy = 0, vw = 0, vh = 0; // Velocity
     let tx = 0, ty = 0, tw = 0, th = 0; // Target
     let isFirstMove = true;
     let isActive = false;
-    
+
     function moveIndicator(el) {
       if (!el) {
         isActive = false;
@@ -1111,7 +1328,7 @@ function createSlidingIndicators(containerSelector, itemSelector, options = {}) 
       }
       isActive = true;
       indicator.style.opacity = '1';
-      
+
       tw = el.offsetWidth;
       th = el.offsetHeight;
       tx = el.offsetLeft;
@@ -1127,66 +1344,66 @@ function createSlidingIndicators(containerSelector, itemSelector, options = {}) 
       // Slow, languid water droplet physics
       const tension = 0.04; // Very low pull strength for a slow, heavy glide
       const friction = 0.85; // High friction for a viscous, liquid feel
-      
+
       vx += (tx - cx) * tension;
       vy += (ty - cy) * tension;
       vw += (tw - cw) * tension;
       vh += (th - ch) * tension;
-      
+
       vx *= friction;
       vy *= friction;
       vw *= friction;
       vh *= friction;
-      
+
       cx += vx;
       cy += vy;
       cw += vw;
       ch += vh;
-      
+
       // Water drop squash and stretch deformation
       const speedX = Math.abs(vx);
-      const stretchX = Math.min(speedX * 0.02, 0.45); 
+      const stretchX = Math.min(speedX * 0.02, 0.45);
       const scaleX = 1 + stretchX;
-      const scaleY = 1 - (stretchX * 0.3); 
-      
+      const scaleY = 1 - (stretchX * 0.3);
+
       indicator.style.width = `${cw}px`;
       indicator.style.height = `${ch}px`;
-      indicator.style.transform = `translate(${cx}px, ${cy}px) scale(${scaleX}, ${scaleY})`;
-      
+      indicator.style.transform = `translate(${cx}px, ${cy}px) scale(${scaleX * jiggleState.scale}, ${scaleY * jiggleState.scale}) rotate(${jiggleState.rotation}deg)`;
+
       // "Bulge Zoom" effect on the text links under the sliding glass
       if (isActive || cw > 0) {
         const indicatorCenterX = cx + (cw / 2);
         items.forEach(item => {
           const itemCenterX = item.offsetLeft + (item.offsetWidth / 2);
           const distance = Math.abs(indicatorCenterX - itemCenterX);
-          
-          const radius = Math.max(cw * 1.5, 60); 
+
+          const radius = Math.max(cw * 1.5, 60);
           let textScale = 1;
-          
+
           if (isActive && distance < radius) {
             const factor = Math.cos((distance / radius) * (Math.PI / 2));
             textScale = 1 + (0.15 * factor); // Max 15% bulge
           }
-          
+
           item.style.transform = `scale(${textScale})`;
         });
       }
-      
+
       requestAnimationFrame(updatePhysics);
     }
-    
+
     if (activeItem) {
       setTimeout(() => moveIndicator(activeItem), 100);
     } else {
       indicator.style.opacity = '0';
     }
-    
+
     window.addEventListener('resize', () => {
       if (activeItem) moveIndicator(activeItem);
     });
-    
+
     updatePhysics();
-    
+
     const isMagnetic = options.magnetic !== false; // Default true
     let isMouseInContainer = false;
     let hoveredItem = null;
@@ -1208,11 +1425,11 @@ function createSlidingIndicators(containerSelector, itemSelector, options = {}) 
         if (!hoveredItem) {
           isActive = true;
           indicator.style.opacity = '1';
-          tw = 32; 
+          tw = 32;
           th = 32;
           tx = mouseX - 16;
           ty = mouseY - 16;
-          
+
           indicator.style.setProperty("--mouse-x", "16px");
           indicator.style.setProperty("--mouse-y", "16px");
         }
@@ -1225,24 +1442,46 @@ function createSlidingIndicators(containerSelector, itemSelector, options = {}) 
         if (!isMagnetic) {
           moveIndicator(item);
         }
+
+        // Satisfying elastic jiggle/pop when the droplet attaches to the link
+        // We jiggle both the text item and the indicator together
+        gsap.killTweensOf(item, "scale,rotation");
+        const rot = Math.random() > 0.5 ? 2 : -2;
+        gsap.fromTo(item,
+          { scale: 0.85, rotation: rot },
+          { scale: 1, rotation: 0, duration: 0.7, ease: "elastic.out(1.2, 0.4)", clearProps: "scale,rotation" }
+        );
+
+        gsap.killTweensOf(jiggleState);
+        gsap.fromTo(jiggleState,
+          { scale: 0.85, rotation: rot },
+          { scale: 1, rotation: 0, duration: 0.7, ease: "elastic.out(1.2, 0.4)" }
+        );
       });
-      
+
       item.addEventListener('mouseleave', () => {
         hoveredItem = null;
+        if (options.hideOnItemLeave) {
+          if (activeItem) {
+            moveIndicator(activeItem);
+          } else {
+            moveIndicator(null);
+          }
+        }
       });
-      
+
       item.addEventListener('mousemove', e => {
         const rect = item.getBoundingClientRect();
         const itemMouseX = e.clientX - rect.left;
         const itemMouseY = e.clientY - rect.top;
-        
+
         if (isMagnetic) {
           const mouseOffsetX = (itemMouseX - (rect.width / 2)) * 0.15;
           const mouseOffsetY = (itemMouseY - (rect.height / 2)) * 0.15;
-          
+
           isActive = true;
           indicator.style.opacity = '1';
-          
+
           tw = item.offsetWidth;
           th = item.offsetHeight;
           tx = item.offsetLeft + mouseOffsetX;
@@ -1257,15 +1496,15 @@ function createSlidingIndicators(containerSelector, itemSelector, options = {}) 
     container.addEventListener('mouseleave', () => {
       isMouseInContainer = false;
       hoveredItem = null;
-      
+
       if (activeItem) {
         moveIndicator(activeItem);
       } else {
         moveIndicator(null);
       }
-      
+
       items.forEach(item => item.style.transform = `scale(1)`);
-      
+
       if (options.hideCursor) {
         document.getElementById('cursorDot')?.classList.remove('is-hidden');
         document.getElementById('cursorRing')?.classList.remove('is-hidden');
@@ -1280,7 +1519,31 @@ function initSlidingNav() {
   createSlidingIndicators('#heroSocials', 'a', { hideCursor: true, magnetic: false });
   createSlidingIndicators('#contactSocials', 'a', { hideCursor: true, magnetic: false });
   createSlidingIndicators('.tech-stack-container', '.tech-tag', { hideCursor: true });
+
+  // Apply water droplet effect to all other standalone links (buttons, inline text links)
+  // Exclude block-level cards, glass containers, logos, mobile menu links, sr-only buttons, and btn-magnetic to avoid double borders
+  const standaloneLinks = document.querySelectorAll('a[href]:not(.nav-link):not(#navActions a):not(#heroSocials a):not(#contactSocials a):not(.tech-tag):not(.block):not(.glass):not(.logo-container):not(.sr-only):not(.btn-magnetic)');
+
+  const linkGroups = new Map();
+  standaloneLinks.forEach(link => {
+    // Add the CSS class required for correct z-indexing and styling
+    link.classList.add('auto-slide-link');
+
+    const parent = link.parentElement;
+    if (!linkGroups.has(parent)) {
+      linkGroups.set(parent, []);
+      parent.classList.add('auto-slide-container');
+    }
+    linkGroups.get(parent).push(link);
+  });
+
+  // Initialize physics for all dynamic link containers
+  if (linkGroups.size > 0) {
+    createSlidingIndicators('.auto-slide-container', '.auto-slide-link', { hideCursor: true, magnetic: false, hideOnItemLeave: true });
+  }
 }
+
+
 
 /* ============================================================
    INIT
@@ -1308,13 +1571,13 @@ function initThemeToggle() {
   const ropeHTML = `
     <div id="theme-rope-container" class="fixed top-0 left-12 md:left-20 z-[200] pointer-events-none select-none touch-none" style="width: 200px; height: 800px; margin-left: -100px;">
       <svg class="w-full h-full overflow-visible absolute top-0 left-0" viewBox="0 0 200 800">
-        <path id="rope-path" d="" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+        <path id="rope-path" d="" class="stroke-white/30" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
-      <div id="rope-handle" class="absolute w-4 h-4 rounded-full bg-white/40 transition-colors shadow-[0_0_8px_rgba(255,255,255,0.8)] cursor-grab active:cursor-grabbing pointer-events-auto hover:bg-white/80 hover:shadow-[0_0_15px_rgba(255,255,255,1)]" style="left: 100px; top: 180px; transform: translate(-50%, -50%);"></div>
+      <div id="rope-handle" class="absolute w-4 h-4 rounded-full bg-white/40 transition-colors shadow-[0_0_8px_rgb(var(--color-white))] cursor-grab active:cursor-grabbing pointer-events-auto hover:bg-white/80 hover:shadow-[0_0_15px_rgb(var(--color-white))]" style="left: 100px; top: 180px; transform: translate(-50%, -50%);"></div>
     </div>
   `;
   document.body.insertAdjacentHTML('beforeend', ropeHTML);
-  
+
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1331,15 +1594,15 @@ function initThemeToggle() {
 
 function initMatterPhysics() {
   const Engine = Matter.Engine,
-        Runner = Matter.Runner,
-        Composites = Matter.Composites,
-        Composite = Matter.Composite,
-        Bodies = Matter.Bodies,
-        Constraint = Matter.Constraint;
+    Runner = Matter.Runner,
+    Composites = Matter.Composites,
+    Composite = Matter.Composite,
+    Bodies = Matter.Bodies,
+    Constraint = Matter.Constraint;
 
   const engine = Engine.create({
-      positionIterations: 20, // Keep maximum stability
-      velocityIterations: 16
+    positionIterations: 20, // Keep maximum stability
+    velocityIterations: 16
   });
   const world = engine.world;
   world.gravity.y = 3.0; // Fast but slightly more natural than 4.0
@@ -1347,40 +1610,40 @@ function initMatterPhysics() {
   const group = Matter.Body.nextGroup(true);
   const numSegments = 14;
   const segmentLength = 14;
-  
-  // Randomize drop-in position for unique swings on every refresh!
-  // Anchor is at X=100. We spawn between X: -200 and X: 400.
-  const randomStartX = (Math.random() * 600) - 200; 
-  // Spawn between Y: -200 and Y: -500.
-  const randomStartY = -(Math.random() * 300 + 200);
 
-  // Create a rope of linked bodies (start high above and off to a random side!)
-  const rope = Composites.stack(randomStartX, randomStartY, 1, numSegments, 0, 0, function(x, y) {
-      return Bodies.rectangle(x, y, 4, segmentLength, { 
-          collisionFilter: { group: group },
-          frictionAir: 0.1, // Reduced air friction so it swings more freely
-          density: 0.1, 
-          slop: 0.1,
-          friction: 0.5
-      });
+  const isHomePage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
+
+  // Randomize drop-in position only on the home page. Otherwise, spawn statically.
+  const randomStartX = isHomePage ? (Math.random() * 600) - 200 : 100;
+  const randomStartY = isHomePage ? -(Math.random() * 300 + 200) : -10;
+
+  // Create a rope of linked bodies
+  const rope = Composites.stack(randomStartX, randomStartY, 1, numSegments, 0, 0, function (x, y) {
+    return Bodies.rectangle(x, y, 4, segmentLength, {
+      collisionFilter: { group: group },
+      frictionAir: 0.02, // Realistic air friction so it swings and bounces longer
+      density: 0.1,
+      slop: 0.1,
+      friction: 0.5
+    });
   });
 
   // Link them loosely together for maximum flexibility
-  Composites.chain(rope, 0, 0.5, 0, -0.5, { 
-      stiffness: 0.6, // Lower stiffness allows it to bend heavily like a real rope
-      length: 4 // Give joints plenty of room to rotate naturally
+  Composites.chain(rope, 0, 0.5, 0, -0.5, {
+    stiffness: 0.9, // Higher stiffness like a real braided cord
+    length: 4 // Give joints plenty of room to rotate naturally
   });
-  
+
   const lastBody = rope.bodies[rope.bodies.length - 1];
-  // No extreme density differences needed anymore, gravity handles the speed
-  
+  Matter.Body.setDensity(lastBody, 0.4); // Reduced weight so it doesn't snap down as forcefully
+
   // Anchor the top of the rope to the ceiling
   const anchor = Constraint.create({
-      pointA: { x: 100, y: -10 },
-      bodyB: rope.bodies[0],
-      pointB: { x: 0, y: -segmentLength/2 },
-      stiffness: 1,
-      length: 0
+    pointA: { x: 100, y: -10 },
+    bodyB: rope.bodies[0],
+    pointB: { x: 0, y: -segmentLength / 2 },
+    stiffness: 1,
+    length: 0
   });
 
   Composite.add(world, [rope, anchor]);
@@ -1388,42 +1651,44 @@ function initMatterPhysics() {
   const ropePath = document.getElementById('rope-path');
   const ropeHandle = document.getElementById('rope-handle');
   const container = document.getElementById('theme-rope-container');
-  
+
   let hasTriggered = false;
-  
+
   // Sync physics loop to DOM
-  Matter.Events.on(engine, 'afterUpdate', function() {
-      const bodies = rope.bodies;
-      
-      // Perfectly smooth Quadratic Bezier spline through physics bodies
-      if (bodies.length > 1) {
-          let pathString = `M 100 -10 L ${bodies[0].position.x} ${bodies[0].position.y} `;
-          for (let i = 1; i < bodies.length - 1; i++) {
-              const curr = bodies[i].position;
-              const next = bodies[i + 1].position;
-              const midX = (curr.x + next.x) / 2;
-              const midY = (curr.y + next.y) / 2;
-              pathString += `Q ${curr.x} ${curr.y} ${midX} ${midY} `;
-          }
-          const last = bodies[bodies.length - 1].position;
-          pathString += `L ${last.x} ${last.y}`;
-          ropePath.setAttribute('d', pathString);
+  Matter.Events.on(engine, 'afterUpdate', function () {
+    const bodies = rope.bodies;
+
+    // Perfectly smooth Quadratic Bezier spline through physics bodies
+    if (bodies.length > 1) {
+      let pathString = `M 100 -10 L ${bodies[0].position.x} ${bodies[0].position.y} `;
+      for (let i = 1; i < bodies.length - 1; i++) {
+        const curr = bodies[i].position;
+        const next = bodies[i + 1].position;
+        const midX = (curr.x + next.x) / 2;
+        const midY = (curr.y + next.y) / 2;
+        pathString += `Q ${curr.x} ${curr.y} ${midX} ${midY} `;
       }
-      
-      ropeHandle.style.left = `${lastBody.position.x}px`;
-      ropeHandle.style.top = `${lastBody.position.y}px`;
-      
-      // Toggle logic
-      if (lastBody.position.y > 340 && !hasTriggered) {
-         hasTriggered = true;
-         toggleTheme();
-         gsap.fromTo(ropeHandle, 
-           { backgroundColor: 'rgba(255,255,255,1)', boxShadow: '0 0 20px rgba(255,255,255,0.9)' }, 
-           { backgroundColor: '', boxShadow: '', duration: 0.4 }
-         );
-      } else if (lastBody.position.y < 280) {
-         hasTriggered = false;
-      }
+      const last = bodies[bodies.length - 1].position;
+      pathString += `L ${last.x} ${last.y}`;
+      ropePath.setAttribute('d', pathString);
+    }
+
+    ropeHandle.style.left = `${lastBody.position.x}px`;
+    ropeHandle.style.top = `${lastBody.position.y}px`;
+
+    // Toggle logic
+    if (lastBody.position.y > 380 && !hasTriggered) {
+      hasTriggered = true;
+      toggleTheme();
+
+      // Use CSS variable injection for the flash so it respects the active theme
+      gsap.fromTo(ropeHandle,
+        { backgroundColor: 'rgb(var(--color-white))', boxShadow: '0 0 20px rgb(var(--color-white))' },
+        { backgroundColor: '', boxShadow: '', duration: 0.4 }
+      );
+    } else if (lastBody.position.y < 320) {
+      hasTriggered = false;
+    }
   });
 
   Runner.run(Runner.create(), engine);
@@ -1432,79 +1697,81 @@ function initMatterPhysics() {
   let dragConstraint = null;
   let hasInteracted = false; // Track if the user has discovered the rope
 
-  // Attraction Animation: Tug the rope slightly every 3 seconds until interacted
-  const tugInterval = setInterval(() => {
+  // Attraction Animation: Tug the rope slightly every 3 seconds until interacted (Only on Home Page)
+  if (isHomePage) {
+    const tugInterval = setInterval(() => {
       if (hasInteracted) {
-          clearInterval(tugInterval);
-          return;
+        clearInterval(tugInterval);
+        return;
       }
       // Apply a subtle downward/sideways force to make it organically twitch
-      Matter.Body.applyForce(lastBody, lastBody.position, { x: 0.01, y: 0.06 });
-  }, 3000);
+      Matter.Body.applyForce(lastBody, lastBody.position, { x: 0.003, y: 0.015 });
+    }, 3000);
+  }
 
   function getCoords(e) {
-      if (e.touches && e.touches.length > 0) {
-          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      }
-      return { x: e.clientX || 0, y: e.clientY || 0 };
+    if (e.touches && e.touches.length > 0) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX || 0, y: e.clientY || 0 };
   }
 
   function onDragStart(e) {
-     hasInteracted = true; // User found it, stop the auto-tug
-     const coords = getCoords(e);
-     
-     const rect = container.getBoundingClientRect();
-     const localX = coords.x - rect.left;
-     const localY = coords.y - rect.top;
-     
-     // Attach an invisible elastic spring from the mouse to the handle
-     dragConstraint = Constraint.create({
-         pointA: { x: localX, y: localY },
-         bodyB: lastBody,
-         pointB: { x: 0, y: segmentLength/2 },
-         stiffness: 0.1, // Stretchy rubber band feel
-         damping: 0.5 // High damping prevents violent jitter when dragged fast
-     });
-     
-     Composite.add(world, dragConstraint);
-     document.body.style.userSelect = 'none';
-  }
-  
-  function onDragMove(e) {
-     if (!dragConstraint) return;
-     
-     // If the user released the mouse outside the browser window, 
-     // e.buttons will be 0 on mousemove. We should release the rope!
-     if (e.type === 'mousemove' && e.buttons === 0) {
-         onDragEnd();
-         return;
-     }
+    hasInteracted = true; // User found it, stop the auto-tug
+    const coords = getCoords(e);
 
-     // Prevent default to stop scrolling on mobile while dragging!
-     if (e.cancelable) e.preventDefault();
-     
-     const coords = getCoords(e);
-     const rect = container.getBoundingClientRect();
-     dragConstraint.pointA = { 
-         x: coords.x - rect.left, 
-         y: coords.y - rect.top 
-     };
+    const rect = container.getBoundingClientRect();
+    const localX = coords.x - rect.left;
+    const localY = coords.y - rect.top;
+
+    // Attach an invisible elastic spring from the mouse to the handle
+    dragConstraint = Constraint.create({
+      pointA: { x: localX, y: localY },
+      bodyB: lastBody,
+      pointB: { x: 0, y: segmentLength / 2 },
+      stiffness: 0.08, // Gentler tug resistance
+      damping: 0.08 // Slightly more damping so it doesn't jitter excessively
+    });
+
+    Composite.add(world, dragConstraint);
+    document.body.style.userSelect = 'none';
   }
-  
+
+  function onDragMove(e) {
+    if (!dragConstraint) return;
+
+    // If the user released the mouse outside the browser window, 
+    // e.buttons will be 0 on mousemove. We should release the rope!
+    if (e.type === 'mousemove' && e.buttons === 0) {
+      onDragEnd();
+      return;
+    }
+
+    // Prevent default to stop scrolling on mobile while dragging!
+    if (e.cancelable) e.preventDefault();
+
+    const coords = getCoords(e);
+    const rect = container.getBoundingClientRect();
+    dragConstraint.pointA = {
+      x: coords.x - rect.left,
+      y: coords.y - rect.top
+    };
+  }
+
   function onDragEnd() {
-     if (!dragConstraint) return;
-     Composite.remove(world, dragConstraint);
-     dragConstraint = null;
-     document.body.style.userSelect = '';
+    if (!dragConstraint) return;
+    Composite.remove(world, dragConstraint);
+    dragConstraint = null;
+    document.body.style.userSelect = '';
   }
 
   ropeHandle.addEventListener('mousedown', onDragStart);
-  window.addEventListener('mousemove', onDragMove, {passive: false});
+  window.addEventListener('mousemove', onDragMove, { passive: false });
   window.addEventListener('mouseup', onDragEnd);
   window.addEventListener('mouseleave', onDragEnd); // Catch mouse leaving window
-  
-  ropeHandle.addEventListener('touchstart', onDragStart, {passive: true});
-  window.addEventListener('touchmove', onDragMove, {passive: false});
+
+  ropeHandle.addEventListener('touchstart', onDragStart, { passive: true });
+  window.addEventListener('touchmove', onDragMove, { passive: false });
   window.addEventListener('touchend', onDragEnd);
   window.addEventListener('touchcancel', onDragEnd); // Catch touch interruptions
 }
@@ -1512,10 +1779,10 @@ function initMatterPhysics() {
 function toggleTheme() {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (isLight) {
-     document.documentElement.setAttribute('data-theme', 'dark');
-     localStorage.setItem('theme', 'dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
   } else {
-     document.documentElement.setAttribute('data-theme', 'light');
-     localStorage.setItem('theme', 'light');
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
   }
 }

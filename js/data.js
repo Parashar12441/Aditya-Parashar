@@ -146,7 +146,7 @@ const PORTFOLIO_DATA = {
         "Architected for future expansion to drones, wearable SOS devices, and smart tourism infrastructure.",
       ],
       tech: ["Firebase", "Firestore", "JavaScript", "Leaflet.js", "Geo-fencing", "AI Integration"],
-      links: { github: null, demo: null },
+      links: { github: null, demo: "https://www.safeyatra.co.in" },
       accent: "blue",
     },
     {
@@ -292,7 +292,7 @@ const PORTFOLIO_DATA = {
       "AI threat analysis from Google News RSS"
     ],
     timeline: [],
-    website_url: ""
+    website_url: "https://www.safeyatra.co.in"
   },
 
   photography: [

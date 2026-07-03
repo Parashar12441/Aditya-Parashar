@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -52,11 +52,13 @@
     theme: {
       extend: {
         colors: {
-          void: '#050505',
-          base: '#0a0a0b',
-          surface: '#101012',
-          elevated: '#16161a',
-        },
+            white: 'rgb(var(--color-white) / <alpha-value>)',
+            black: 'rgb(var(--color-black) / <alpha-value>)',
+            void: 'var(--bg-void)',
+            base: 'var(--bg-base)',
+            surface: 'var(--bg-surface)',
+            elevated: 'var(--bg-elevated)',
+          },
         fontFamily: {
           display: ['Space Grotesk', 'Inter', 'sans-serif'],
           body: ['Inter', 'sans-serif'],
