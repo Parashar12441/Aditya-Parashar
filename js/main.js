@@ -1348,21 +1348,27 @@ function initMatterPhysics() {
   const numSegments = 14;
   const segmentLength = 14;
   
-  // Create a rope of linked bodies (start high above screen so it drops in dramatically!)
-  const rope = Composites.stack(100, -300, 1, numSegments, 0, 0, function(x, y) {
+  // Randomize drop-in position for unique swings on every refresh!
+  // Anchor is at X=100. We spawn between X: -200 and X: 400.
+  const randomStartX = (Math.random() * 600) - 200; 
+  // Spawn between Y: -200 and Y: -500.
+  const randomStartY = -(Math.random() * 300 + 200);
+
+  // Create a rope of linked bodies (start high above and off to a random side!)
+  const rope = Composites.stack(randomStartX, randomStartY, 1, numSegments, 0, 0, function(x, y) {
       return Bodies.rectangle(x, y, 4, segmentLength, { 
           collisionFilter: { group: group },
-          frictionAir: 0.15, // High air friction acts like thick fluid to stop "dancing"
+          frictionAir: 0.1, // Reduced air friction so it swings more freely
           density: 0.1, 
           slop: 0.1,
           friction: 0.5
       });
   });
 
-  // Link them tightly together
+  // Link them loosely together for maximum flexibility
   Composites.chain(rope, 0, 0.5, 0, -0.5, { 
-      stiffness: 0.9, // Slight flex so it behaves like a rope, not a stick
-      length: 2 // Gives joints room to rotate naturally
+      stiffness: 0.6, // Lower stiffness allows it to bend heavily like a real rope
+      length: 4 // Give joints plenty of room to rotate naturally
   });
   
   const lastBody = rope.bodies[rope.bodies.length - 1];
