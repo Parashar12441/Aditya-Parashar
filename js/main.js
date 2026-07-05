@@ -1922,14 +1922,14 @@ function initMatterPhysics() {
     Constraint = Matter.Constraint;
 
   const engine = Engine.create({
-    positionIterations: 20, // Keep maximum stability
-    velocityIterations: 16
+    positionIterations: 40, // Increased for maximum rigidity
+    velocityIterations: 30
   });
   const world = engine.world;
   world.gravity.y = 3.0; // Fast but slightly more natural than 4.0
 
   const group = Matter.Body.nextGroup(true);
-  const numSegments = 14;
+  const numSegments = 10;
   const segmentLength = 14;
 
   const isHomePage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
@@ -1952,11 +1952,11 @@ function initMatterPhysics() {
   // Link them loosely together for maximum flexibility
   Composites.chain(rope, 0, 0.5, 0, -0.5, {
     stiffness: 1.0, // Fully rigid to prevent heavy bob bouncing
-    length: 4 // Give joints plenty of room to rotate naturally
+    length: 0 // Zero gap between joints to prevent ANY expansion/stretch
   });
 
   const lastBody = rope.bodies[rope.bodies.length - 1];
-  Matter.Body.setDensity(lastBody, 4.0); // Make the bob very heavy so it aggressively pulls the rope toward gravity
+  Matter.Body.setDensity(lastBody, 2.0); // Make the bob very heavy so it aggressively pulls the rope toward gravity
 
   // Anchor the top of the rope to the ceiling
   const anchor = Constraint.create({
@@ -1998,7 +1998,7 @@ function initMatterPhysics() {
     ropeHandle.style.top = `${lastBody.position.y}px`;
 
     // Toggle logic
-    if (lastBody.position.y > 260 && !hasTriggered) {
+    if (lastBody.position.y > 170 && !hasTriggered) {
       hasTriggered = true;
       toggleTheme();
 
@@ -2007,7 +2007,7 @@ function initMatterPhysics() {
         { backgroundColor: 'rgb(var(--color-white))', boxShadow: '0 0 20px rgb(var(--color-white))' },
         { backgroundColor: '', boxShadow: '', duration: 0.4 }
       );
-    } else if (lastBody.position.y < 220) {
+    } else if (lastBody.position.y < 140) {
       hasTriggered = false;
     }
   });
