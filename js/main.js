@@ -1826,6 +1826,37 @@ function initSlidingNav() {
 
 
 /* ============================================================
+   LIVE VISITOR COUNTER
+   ============================================================ */
+async function initLiveCounter() {
+  const counterEl = document.getElementById("visitCounter");
+  if (!counterEl) return;
+  
+  try {
+    const response = await fetch("https://api.counterapi.dev/v1/aditya-parashar.vercel.app/visits/up");
+    if (!response.ok) throw new Error("Failed to fetch count");
+    const data = await response.json();
+    
+    // Animate the counter using GSAP
+    if (window.gsap) {
+      gsap.to({ val: 0 }, {
+        val: data.count,
+        duration: 2,
+        ease: "power3.out",
+        onUpdate: function () { 
+          counterEl.textContent = Math.round(this.targets()[0].val).toLocaleString(); 
+        },
+      });
+    } else {
+      counterEl.textContent = data.count.toLocaleString();
+    }
+  } catch (err) {
+    console.error("Live Counter Error:", err);
+    counterEl.textContent = "N/A";
+  }
+}
+
+/* ============================================================
    INIT
    ============================================================ */
 
@@ -1837,6 +1868,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initRadarProgress();
   initNav();
   initCounters();
+  initLiveCounter();
   initCommandPalette();
   initFramePhotoParallax();
   initGlassCursorGlow();
