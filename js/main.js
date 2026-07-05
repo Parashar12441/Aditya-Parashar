@@ -283,6 +283,215 @@ window.openImmersiveProject = function(projectId) {
   closeBtn.addEventListener("click", closeViewer);
 };
 
+function renderEvents() {
+  const eventsEl = document.getElementById('eventsGrid') || document.getElementById('eventsList');
+  if (!eventsEl) return;
+  
+  eventsEl.innerHTML = D.events.map((e, i) => {
+    const isWinner = e.role && (e.role.toLowerCase().includes('winner') || e.role.toLowerCase().includes('first'));
+    const cardStyle = isWinner ? 'border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)] hover:shadow-[0_0_25px_rgba(234,179,8,0.2)]' : 'border border-white/5 hover:bg-white/10';
+    const roleStyle = isWinner ? 'text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-2 py-0.5 rounded text-[10px]' : 'text-accent-blue';
+    const roleIcon = isWinner ? '<i data-lucide=\'trophy\' class=\'w-3 h-3\'></i> ' : '';
+
+    return `
+      <div onclick="openImmersiveEvent('${e.id}')" class="block group glass rounded-3xl p-6 transition-all cursor-pointer ${cardStyle}" data-reveal style="transition-delay: ${i * 0.05}s">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-3">
+          <span class="text-xs font-mono ${isWinner ? 'text-yellow-500/80 border-yellow-500/30 bg-yellow-500/5' : 'text-white/40 border-white/10'} border rounded-full px-2.5 py-1 flex items-center gap-1.5">${isWinner ? '<i data-lucide="award" class="w-3 h-3"></i>' : ''}${e.type}</span>
+          <span class="text-xs font-mono text-white/40 flex items-center gap-2"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${e.location || 'Remote'}</span>
+        </div>
+        <div class="flex items-start justify-between gap-4 mb-2">
+          <h3 class="font-display ${e.title.length > 50 ? 'text-lg md:text-xl leading-tight' : 'text-2xl'} group-hover:text-accent-blue transition-colors" style="--tw-text-opacity:1; color:var(--accent-blue, #4f7cff)">${e.title}</h3>
+          <i data-lucide="expand" class="w-4 h-4 text-white/30 group-hover:text-white/80 transition-colors mt-1 shrink-0"></i>
+        </div>
+        <div class="text-sm font-mono text-white/50 mb-3 flex items-center gap-3 flex-wrap">
+          <span class="flex items-center gap-2"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> ${e.date}</span>
+          ${e.role ? `<span class="${roleStyle}">${roleIcon}${e.role}</span>` : ''}
+        </div>
+        ${e.description ? `<p class="mt-2 text-white/60 leading-relaxed">${e.description}</p>` : ''}
+      </div>
+    `}).join('');
+}
+
+window.openImmersiveEvent = function (eventId) {
+  const event = D.events.find(e => e.id === eventId);
+  if (!event) return;
+
+  const hasMedia = !!event.image || (event.images && event.images.length > 0);
+  const mediaArray = event.images && event.images.length > 0 ? event.images : (event.image ? [event.image] : []);
+
+  const viewerHtml = `
+    <div id="immersiveViewer" class="fixed inset-0 flex items-center justify-center p-4 md:p-8 lg:p-12 pointer-events-auto" style="z-index: 9999999; opacity: 0; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+      <div class="absolute inset-0 bg-black/40" id="closeImmersiveBg"></div>
+      
+      <div id="immersiveModal" class="relative w-full max-w-7xl max-h-[95vh] glass-strong rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl" style="opacity: 0; transform: translateY(30px) scale(0.95);">
+        
+        <button id="closeImmersive" class="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors btn-magnetic">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+
+        ${hasMedia ? `
+        <div class="w-full md:w-3/5 h-[40vh] md:h-auto md:self-stretch relative border-b md:border-b-0 md:border-r border-white/10 overflow-hidden group/gallery bg-black/20">
+          <div id="gallery-track" class="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scroll-behavior: smooth;">
+            ${mediaArray.map(img => `
+            <div class="w-full h-full shrink-0 snap-center relative p-4">
+              <img src="${img}" class="absolute inset-0 w-full h-full object-contain p-4" />
+            </div>
+            `).join('')}
+          </div>
+          
+          ${mediaArray.length > 1 ? `
+          <div id="gallery-dots" class="auto-slide-container absolute bottom-4 left-0 right-0 flex justify-center gap-3 z-20 pointer-events-auto opacity-100 transition-opacity duration-300">
+             ${mediaArray.map((_, i) => `<div class="auto-slide-link w-2 h-2 rounded-full bg-white/30 cursor-pointer ${i === 0 ? 'is-active' : ''}" onclick="document.getElementById('gallery-track').scrollTo({left: document.getElementById('gallery-track').clientWidth * ${i}, behavior: 'smooth'})"></div>`).join('')}
+          </div>
+          <div class="absolute top-4 left-4 z-20 pointer-events-none bg-black/40 backdrop-blur-md text-white/80 text-[10px] font-mono px-2 py-1 rounded-md border border-white/10 opacity-100 transition-opacity duration-300">
+            SWIPE TO EXPLORE
+          </div>
+          ` : ''}
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden pointer-events-none"></div>
+        </div>
+        ` : ''}
+
+        <div class="w-full ${hasMedia ? 'md:w-2/5 flex-1 md:min-h-[60vh]' : 'h-full'} p-6 md:p-10 lg:p-12 overflow-y-auto custom-scrollbar flex flex-col justify-center">
+          <div id="immersiveInfo">
+            <div class="flex flex-wrap items-center gap-3 mb-6">
+              <span class="font-mono text-xs tracking-widest uppercase text-white/60 border border-white/10 rounded-full px-3 py-1.5">${event.type}</span>
+              ${event.role ? `<span class="font-mono text-xs tracking-widest uppercase text-accent-blue border border-accent-blue/20 bg-accent-blue/5 rounded-full px-3 py-1.5 flex items-center gap-2">${event.role}</span>` : ''}
+            </div>
+
+            <h2 class="font-display ${event.title.length > 50 ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl lg:text-5xl'} text-white mb-6 tracking-tight leading-tight">${event.title}</h2>
+            
+            <div class="flex flex-col gap-3 mb-8">
+              <div class="flex items-center gap-3 text-white/50 text-sm font-mono">
+                <i data-lucide="calendar" class="w-4 h-4"></i> ${event.date}
+              </div>
+              <div class="flex items-center gap-3 text-white/50 text-sm font-mono">
+                <i data-lucide="map-pin" class="w-4 h-4"></i> ${event.location || 'Remote'}
+              </div>
+            </div>
+
+            <p class="text-base text-white/60 leading-relaxed ${event.details || event.team ? 'mb-6' : 'mb-10'} max-w-lg">${event.description}</p>
+            
+            ${event.details && event.details.length > 0 ? `
+            <div class="flex flex-col gap-3 mb-6 max-w-lg">
+              ${event.details.map(d => `
+              <details class="group/accordion border border-white/10 rounded-xl bg-white/5 overflow-hidden transition-all duration-300">
+                <summary class="flex items-center justify-between p-4 cursor-pointer list-none text-sm font-medium text-white/80 hover:bg-white/5 transition-colors select-none [&::-webkit-details-marker]:hidden">
+                  ${d.title}
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-white/40 transition-transform duration-300 group-open/accordion:rotate-180"></i>
+                </summary>
+                <div class="p-4 pt-0 text-sm text-white/50 leading-relaxed whitespace-pre-line">
+                  ${d.content}
+                </div>
+              </details>
+              `).join('')}
+            </div>
+            ` : ''}
+            
+            ${event.team && event.team.length > 0 ? `
+            <div class="mb-10 max-w-lg">
+              <h3 class="text-xs font-mono uppercase tracking-widest text-white/40 mb-3 flex items-center gap-2"><i data-lucide="users" class="w-3.5 h-3.5"></i> Team</h3>
+              <div id="immersiveTeam" class="flex flex-wrap gap-1 auto-slide-container p-1 rounded-full border border-white/10 bg-white/5 glass w-fit">
+                ${event.team.map(member => {
+                  const name = typeof member === 'string' ? member : member.name;
+                  const link = typeof member === 'string' ? null : member.link;
+                  if (link && link !== '#') {
+                    return `<a href="${link}" target="_blank" rel="noopener noreferrer" class="auto-slide-link relative z-10 text-xs px-3 py-1.5 flex items-center gap-2 text-white/70 hover:text-white transition-colors duration-300 group/team">
+                      ${name}
+                      <i data-lucide="external-link" class="w-3 h-3 opacity-40 group-hover/team:opacity-100 transition-opacity"></i>
+                    </a>`;
+                  }
+                  return `<span class="relative z-10 text-xs px-3 py-1.5 flex items-center gap-2 text-white/70">
+                    ${name}
+                  </span>`;
+                }).join('')}
+              </div>
+            </div>
+            ` : ''}
+          
+          ${event.link && event.link !== '#' ? `
+          <div class="flex flex-wrap gap-4 mt-6" id="immersiveLinks">
+            <a href="${event.link}" target="_blank" rel="noopener noreferrer" class="glass rounded-full px-8 py-3 text-sm text-[#0a66c2] hover:text-white transition-colors flex items-center gap-3"><i data-lucide="linkedin" class="w-5 h-5"></i> Open in LinkedIn</a>
+          </div>
+          ` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', viewerHtml);
+  if (window.lucide) lucide.createIcons();
+
+  if (document.getElementById('immersiveTeam')) {
+    createSlidingIndicators('#immersiveTeam', '.auto-slide-link', { hideCursor: true, magnetic: false, hideOnItemLeave: true });
+  }
+
+  if (document.getElementById('gallery-dots')) {
+    createSlidingIndicators('#gallery-dots', '.auto-slide-link', { hideCursor: true, magnetic: false, hideOnItemLeave: false, defaultIndex: 0 });
+    
+    const track = document.getElementById('gallery-track');
+    const dots = document.querySelectorAll('#gallery-dots .auto-slide-link');
+    if (track && dots.length > 0) {
+      track.addEventListener('scroll', () => {
+        const index = Math.round(track.scrollLeft / track.clientWidth);
+        dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+      }, { passive: true });
+
+      let autoScrollInterval;
+      const startAutoScroll = () => {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = setInterval(() => {
+          let nextIndex = Math.round(track.scrollLeft / track.clientWidth) + 1;
+          if (nextIndex >= dots.length) nextIndex = 0;
+          track.scrollTo({ left: track.clientWidth * nextIndex, behavior: 'smooth' });
+        }, 3000);
+        const v = document.getElementById("immersiveViewer");
+        if (v) v._autoScrollInterval = autoScrollInterval;
+      };
+      
+      startAutoScroll();
+    }
+  }
+
+  const viewer = document.getElementById("immersiveViewer");
+  const modal = document.getElementById("immersiveModal");
+  const closeBtn = document.getElementById("closeImmersive");
+  const closeBg = document.getElementById("closeImmersiveBg");
+  
+  if (typeof initMagnetic === 'function') {
+    setTimeout(initMagnetic, 100);
+  }
+
+  document.body.style.overflow = "hidden";
+
+  const tl = gsap.timeline();
+
+  tl.to(viewer, {
+    opacity: 1,
+    duration: 0.4,
+    ease: "power2.out"
+  });
+
+  tl.to(modal, {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    duration: 0.6,
+    ease: "back.out(1.2)"
+  }, "-=0.2");
+
+  const closeViewer = () => {
+    if (viewer && viewer._autoScrollInterval) clearInterval(viewer._autoScrollInterval);
+    tl.reverse().then(() => {
+      viewer.remove();
+      document.body.style.overflow = "";
+    });
+  };
+
+  closeBtn.addEventListener("click", closeViewer);
+  closeBg.addEventListener("click", closeViewer);
+}
+
 function renderSkills() {
   const skillsEl = document.getElementById("skillsPanel");
   if (!skillsEl) return;
@@ -751,6 +960,7 @@ function renderAll() {
   renderAbout();
   renderTimeline();
   renderProjects();
+  renderEvents();
   renderHomeResearchStartup();
   renderSkills();
   renderAchievements();
@@ -1786,3 +1996,10 @@ function toggleTheme() {
     localStorage.setItem('theme', 'light');
   }
 }
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const closeBtn = document.getElementById("closeImmersive");
+    if (closeBtn) closeBtn.click();
+  }
+});

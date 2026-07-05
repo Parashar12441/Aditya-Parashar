@@ -1012,3 +1012,35 @@ a.auto-slide-link:not(.btn-magnetic):not(.nav-link):not(.px-3):not(.px-4):not(.p
   margin: -0.35rem -0.75rem;
   border-radius: 99px;
 }
+
+/* Smooth Accordion Details Animation */
+details.group\/accordion > summary {
+  list-style: none;
+}
+details.group\/accordion > summary::-webkit-details-marker {
+  display: none;
+}
+details.group\/accordion[open] > div {
+  animation: accordionSlideDown 0.3s ease-out forwards;
+  transform-origin: top;
+}
+@keyframes accordionSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide Scrollbar Utility */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
