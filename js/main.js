@@ -2097,7 +2097,37 @@ function initMatterPhysics() {
   window.addEventListener('touchcancel', onDragEnd); // Catch touch interruptions
 }
 
+function playSwitchSound() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+  
+  if (!window.audioCtx) {
+    window.audioCtx = new AudioContext();
+  }
+  const ctx = window.audioCtx;
+  if (ctx.state === 'suspended') ctx.resume();
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  // Create a mechanical 'click/clack' percussive strike
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(800, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.04);
+
+  gain.gain.setValueAtTime(0.5, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.04);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.04);
+}
+
 function toggleTheme() {
+  playSwitchSound();
+  
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (isLight) {
     document.documentElement.setAttribute('data-theme', 'dark');
