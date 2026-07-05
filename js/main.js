@@ -115,21 +115,21 @@ function renderTimeline() {
 const ACCENT_ICON = { blue: "radar", emerald: "cpu", purple: "hotel", gold: "train-front" };
 
 function renderProjects() {
-    const projEl = document.getElementById("projectsGrid");
-    if (!projEl) return;
-    
-    // Remove the grid classes to allow a vertical list
-    projEl.classList.remove("grid", "md:grid-cols-2");
-    // Ensure it's a flex column with gap for spacing the cards
-    projEl.classList.add("flex", "flex-col", "gap-6");
-    
-    let projectsData = D.projects;
-    if (projEl.classList.contains('home-truncate-projects')) {
-      projectsData = projectsData.slice(0, 2);
-    }
-  
-    projEl.innerHTML = projectsData.map((p, i) => {
-      return `
+  const projEl = document.getElementById("projectsGrid");
+  if (!projEl) return;
+
+  // Remove the grid classes to allow a vertical list
+  projEl.classList.remove("grid", "md:grid-cols-2");
+  // Ensure it's a flex column with gap for spacing the cards
+  projEl.classList.add("flex", "flex-col", "gap-6");
+
+  let projectsData = D.projects;
+  if (projEl.classList.contains('home-truncate-projects')) {
+    projectsData = projectsData.slice(0, 2);
+  }
+
+  projEl.innerHTML = projectsData.map((p, i) => {
+    return `
         <div onclick="openImmersiveProject('${p.id}')" class="project-list-item group relative p-8 md:p-12 glass rounded-3xl border border-white/5 cursor-pointer overflow-hidden transition-all hover:bg-white/5" data-reveal style="transition-delay: ${i * 0.05}s">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
             <div>
@@ -145,10 +145,10 @@ function renderProjects() {
           <div class="absolute inset-0 bg-gradient-to-r from-accent-${p.accent}/0 via-accent-${p.accent}/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
         </div>
       `;
-    }).join("");
+  }).join("");
 }
 
-window.openImmersiveProject = function(projectId) {
+window.openImmersiveProject = function (projectId) {
   const project = D.projects.find(p => p.id === projectId);
   if (!project) return;
 
@@ -172,10 +172,10 @@ window.openImmersiveProject = function(projectId) {
         <!-- Media Side -->
         <div class="w-full md:w-3/5 h-[40vh] md:h-full relative flex items-center justify-center p-6 md:p-12 lg:p-16">
           <div id="immersiveMedia" class="w-full h-full rounded-3xl overflow-hidden relative shadow-2xl border border-white/10 bg-white/5" style="opacity: 0; transform: translateY(40px) scale(0.95);">
-            ${project.media.video ? 
-              `<video src="${project.media.video}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>` : 
-              `<img src="${project.media.image}" class="w-full h-full object-cover" />`
-            }
+            ${project.media.video ?
+        `<video src="${project.media.video}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>` :
+        `<img src="${project.media.image}" class="w-full h-full object-cover" />`
+      }
           </div>
         </div>
         ` : ''}
@@ -215,7 +215,7 @@ window.openImmersiveProject = function(projectId) {
 
   const viewer = document.getElementById("immersiveViewer");
   const closeBtn = document.getElementById("closeImmersive");
-  
+
   if (typeof initMagnetic === 'function') {
     setTimeout(initMagnetic, 100);
   }
@@ -231,7 +231,7 @@ window.openImmersiveProject = function(projectId) {
     opacity: 1,
     duration: 0.5,
     ease: "power2.out",
-    onUpdate: function() {
+    onUpdate: function () {
       const progress = this.progress();
       viewer.style.backdropFilter = `blur(${progress * 40}px)`;
       viewer.style.webkitBackdropFilter = `blur(${progress * 40}px)`;
@@ -272,7 +272,7 @@ window.openImmersiveProject = function(projectId) {
     duration: 0.4,
     ease: "power2.out"
   }, "-=0.2");
-  
+
   tl.to(closeBtn, {
     opacity: 1,
     scale: 1,
@@ -294,12 +294,12 @@ window.openImmersiveProject = function(projectId) {
 function renderEvents() {
   const eventsEl = document.getElementById('eventsGrid') || document.getElementById('eventsList');
   if (!eventsEl) return;
-  
+
   let eventsData = D.events;
   if (eventsEl.classList.contains('home-truncate-events')) {
     eventsData = eventsData.slice(0, 2);
   }
-  
+
   eventsEl.innerHTML = eventsData.map((e, i) => {
     const isWinner = e.role && (e.role.toLowerCase().includes('winner') || e.role.toLowerCase().includes('first'));
     const cardStyle = isWinner ? 'border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)] hover:shadow-[0_0_25px_rgba(234,179,8,0.2)]' : 'border border-white/5 hover:bg-white/10';
@@ -405,18 +405,18 @@ window.openImmersiveEvent = function (eventId) {
               <h3 class="text-xs font-mono uppercase tracking-widest text-white/40 mb-3 flex items-center gap-2"><i data-lucide="users" class="w-3.5 h-3.5"></i> Team</h3>
               <div id="immersiveTeam" class="flex flex-wrap gap-1 auto-slide-container p-1 rounded-full border border-white/10 bg-white/5 glass w-fit">
                 ${event.team.map(member => {
-                  const name = typeof member === 'string' ? member : member.name;
-                  const link = typeof member === 'string' ? null : member.link;
-                  if (link && link !== '#') {
-                    return `<a href="${link}" target="_blank" rel="noopener noreferrer" class="auto-slide-link relative z-10 text-xs px-3 py-1.5 flex items-center gap-2 text-white/70 hover:text-white transition-colors duration-300 group/team">
+    const name = typeof member === 'string' ? member : member.name;
+    const link = typeof member === 'string' ? null : member.link;
+    if (link && link !== '#') {
+      return `<a href="${link}" target="_blank" rel="noopener noreferrer" class="auto-slide-link relative z-10 text-xs px-3 py-1.5 flex items-center gap-2 text-white/70 hover:text-white transition-colors duration-300 group/team">
                       ${name}
                       <i data-lucide="external-link" class="w-3 h-3 opacity-40 group-hover/team:opacity-100 transition-opacity"></i>
                     </a>`;
-                  }
-                  return `<span class="relative z-10 text-xs px-3 py-1.5 flex items-center gap-2 text-white/70">
+    }
+    return `<span class="relative z-10 text-xs px-3 py-1.5 flex items-center gap-2 text-white/70">
                     ${name}
                   </span>`;
-                }).join('')}
+  }).join('')}
               </div>
             </div>
             ` : ''}
@@ -441,7 +441,7 @@ window.openImmersiveEvent = function (eventId) {
 
   if (document.getElementById('gallery-dots')) {
     createSlidingIndicators('#gallery-dots', '.auto-slide-link', { hideCursor: true, magnetic: false, hideOnItemLeave: false, defaultIndex: 0 });
-    
+
     const track = document.getElementById('gallery-track');
     const dots = document.querySelectorAll('#gallery-dots .auto-slide-link');
     if (track && dots.length > 0) {
@@ -461,7 +461,7 @@ window.openImmersiveEvent = function (eventId) {
         const v = document.getElementById("immersiveViewer");
         if (v) v._autoScrollInterval = autoScrollInterval;
       };
-      
+
       startAutoScroll();
     }
   }
@@ -470,7 +470,7 @@ window.openImmersiveEvent = function (eventId) {
   const modal = document.getElementById("immersiveModal");
   const closeBtn = document.getElementById("closeImmersive");
   const closeBg = document.getElementById("closeImmersiveBg");
-  
+
   if (typeof initMagnetic === 'function') {
     setTimeout(initMagnetic, 100);
   }
@@ -579,6 +579,9 @@ async function renderGithubWidgets() {
 
     container.innerHTML = `
       <div class="glass-card rounded-3xl p-8 flex flex-col justify-center min-h-[280px]">
+        <div class="flex items-center gap-2 mb-6 text-white/50 text-[10px] font-mono uppercase tracking-widest border border-white/10 rounded-full px-4 py-1.5 w-fit">
+          <svg class="w-3.5 h-3.5" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg> GitHub
+        </div>
         <div class="flex items-start gap-4 mb-6">
           <img src="${data.avatar_url}" alt="${data.login}" class="w-16 h-16 rounded-full border border-white/10" />
           <div>
@@ -589,19 +592,47 @@ async function renderGithubWidgets() {
         
         <p class="text-sm text-white/60 mb-6 leading-relaxed">${data.bio || "Building things for the web."}</p>
         
-        <div class="grid grid-cols-3 gap-4 border-t border-white/10 pt-6">
-          <div class="text-center">
-            <div class="font-display text-2xl text-white">${data.public_repos}</div>
-            <div class="text-[10px] uppercase tracking-widest text-white/40 mt-1">Repos</div>
+        <div class="grid grid-cols-3 gap-4 pt-8 mt-6 border-t border-white/5 relative">
+          <!-- Subtle liquid ambient glow -->
+          <div class="absolute inset-0 bg-gradient-to-t from-accent-blue/5 to-transparent pointer-events-none blur-2xl"></div>
+          
+          <!-- Repos -->
+          <div class="relative group">
+            <div class="absolute inset-0 bg-accent-blue/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500"></div>
+            <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent backdrop-blur-2xl p-5 text-center transition-all duration-500 group-hover:-translate-y-1 group-hover:border-white/20" style="box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 1px rgba(0,0,0,0.5), 0 10px 40px rgba(0,0,0,0.3);">
+              <!-- Top liquid sheen reflection -->
+              <div class="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/10 to-transparent opacity-60 rounded-t-2xl pointer-events-none"></div>
+              <!-- Content -->
+              <div class="font-display text-3xl font-light text-white tracking-tight relative z-10 drop-shadow-sm">${data.public_repos}</div>
+              <div class="text-[9px] uppercase tracking-[0.2em] text-white/50 mt-1 relative z-10 font-semibold group-hover:text-accent-blue transition-colors">Repos</div>
+            </div>
           </div>
-          <div class="text-center">
-            <div class="font-display text-2xl text-white">${data.followers}</div>
-            <div class="text-[10px] uppercase tracking-widest text-white/40 mt-1">Followers</div>
+
+          <!-- Followers -->
+          <div class="relative group">
+            <div class="absolute inset-0 bg-accent-blue/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500"></div>
+            <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent backdrop-blur-2xl p-5 text-center transition-all duration-500 group-hover:-translate-y-1 group-hover:border-white/20" style="box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 1px rgba(0,0,0,0.5), 0 10px 40px rgba(0,0,0,0.3);">
+              <div class="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/10 to-transparent opacity-60 rounded-t-2xl pointer-events-none"></div>
+              <div class="font-display text-3xl font-light text-white tracking-tight relative z-10 drop-shadow-sm">${data.followers}</div>
+              <div class="text-[9px] uppercase tracking-[0.2em] text-white/50 mt-1 relative z-10 font-semibold group-hover:text-accent-blue transition-colors">Followers</div>
+            </div>
           </div>
-          <div class="text-center">
-            <div class="font-display text-2xl text-white">${data.following}</div>
-            <div class="text-[10px] uppercase tracking-widest text-white/40 mt-1">Following</div>
+
+          <!-- Following -->
+          <div class="relative group">
+            <div class="absolute inset-0 bg-accent-blue/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500"></div>
+            <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent backdrop-blur-2xl p-5 text-center transition-all duration-500 group-hover:-translate-y-1 group-hover:border-white/20" style="box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 1px rgba(0,0,0,0.5), 0 10px 40px rgba(0,0,0,0.3);">
+              <div class="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/10 to-transparent opacity-60 rounded-t-2xl pointer-events-none"></div>
+              <div class="font-display text-3xl font-light text-white tracking-tight relative z-10 drop-shadow-sm">${data.following}</div>
+              <div class="text-[9px] uppercase tracking-[0.2em] text-white/50 mt-1 relative z-10 font-semibold group-hover:text-accent-blue transition-colors">Following</div>
+            </div>
           </div>
+        </div>
+        
+        <div class="flex justify-center mt-8 mb-2">
+          <a href="https://git.io/streak-stats" target="_blank" rel="noopener noreferrer">
+            <img src="https://github-readme-streak-stats.herokuapp.com?user=Parashar12441&theme=dark&hide_border=true" alt="GitHub Streak" class="w-full max-w-[500px] transition-transform hover:scale-[1.02] filter hover:brightness-110" />
+          </a>
         </div>
         
         <a href="${data.html_url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 mt-8 text-xs font-mono accent-blue" style="color:#4f7cff;">
@@ -630,16 +661,18 @@ async function renderGithubWidgets() {
 
 function leetcodeFallback(container, username) {
   container.innerHTML = `
+    <div class="flex items-center gap-2 mb-6 text-white/50 text-[10px] font-mono uppercase tracking-widest border border-white/10 rounded-full px-4 py-1.5 w-fit">
+      <svg class="w-3.5 h-3.5" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M16.102 17.93l-2.697 2.607c-.466.467-1.111.662-1.823.662s-1.357-.195-1.824-.662l-4.332-4.363c-.467-.467-.702-1.15-.702-1.863s.235-1.357.702-1.824l4.319-4.38c.467-.467 1.125-.645 1.837-.645s1.357.195 1.823.662l2.697 2.606c.514.515 1.365.497 1.9-.038.535-.536.553-1.387.039-1.901l-2.609-2.636a5.055 5.055 0 0 0-2.445-1.337l2.467-2.503c.516-.514.498-1.366-.037-1.901-.535-.535-1.387-.552-1.902-.038l-10.1 10.101c-.981.982-1.497 2.337-1.497 3.814s.516 2.831 1.497 3.813l10.098 10.102a5.355 5.355 0 0 0 3.813 1.497c1.477 0 2.831-.516 3.813-1.497l2.61-2.636c.514-.515.496-1.366-.039-1.901-.535-.535-1.386-.517-1.9.038zM20.811 13.01H10.666c-.702 0-1.27.604-1.27 1.346s.568 1.346 1.27 1.346h10.145c.701 0 1.27-.604 1.27-1.346s-.569-1.346-1.27-1.346z"/></svg> LeetCode
+    </div>
     <div class="flex items-center gap-4">
       <i data-lucide="code-2" class="w-6 h-6 accent-blue flex-shrink-0" style="color:#4f7cff;"></i>
       <div>
-        <p class="text-sm text-white/60">Live stats are unavailable right now.</p>
-        <a href="https://leetcode.com/u/${username}/" target="_blank" rel="noopener noreferrer" class="text-sm accent-blue underline underline-offset-4" style="color:#4f7cff;">View the profile directly →</a>
+        <p class="text-sm text-white/60">Live stats are temporarily unavailable (API Limit).</p>
+        <a href="https://leetcode.com/${username}" target="_blank" rel="noopener noreferrer" class="text-sm accent-blue underline underline-offset-4" style="color:#4f7cff;">View LeetCode profile directly →</a>
       </div>
     </div>
   `;
   if (window.lucide) lucide.createIcons();
-  initGlassCursorGlow();
 }
 
 function renderLeetcodeStats(container, stats, username) {
@@ -650,6 +683,9 @@ function renderLeetcodeStats(container, stats, username) {
   ];
 
   container.innerHTML = `
+    <div class="flex items-center gap-2 mb-6 text-white/50 text-[10px] font-mono uppercase tracking-widest border border-white/10 rounded-full px-4 py-1.5 w-fit">
+      <svg class="w-3.5 h-3.5" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M16.102 17.93l-2.697 2.607c-.466.467-1.111.662-1.823.662s-1.357-.195-1.824-.662l-4.332-4.363c-.467-.467-.702-1.15-.702-1.863s.235-1.357.702-1.824l4.319-4.38c.467-.467 1.125-.645 1.837-.645s1.357.195 1.823.662l2.697 2.606c.514.515 1.365.497 1.9-.038.535-.536.553-1.387.039-1.901l-2.609-2.636a5.055 5.055 0 0 0-2.445-1.337l2.467-2.503c.516-.514.498-1.366-.037-1.901-.535-.535-1.387-.552-1.902-.038l-10.1 10.101c-.981.982-1.497 2.337-1.497 3.814s.516 2.831 1.497 3.813l10.098 10.102a5.355 5.355 0 0 0 3.813 1.497c1.477 0 2.831-.516 3.813-1.497l2.61-2.636c.514-.515.496-1.366-.039-1.901-.535-.535-1.386-.517-1.9.038zM20.811 13.01H10.666c-.702 0-1.27.604-1.27 1.346s.568 1.346 1.27 1.346h10.145c.701 0 1.27-.604 1.27-1.346s-.569-1.346-1.27-1.346z"/></svg> LeetCode
+    </div>
     <div class="grid sm:grid-cols-3 gap-6 mb-8">
       <div>
         <div class="font-display text-4xl">${stats.totalSolved}</div>
