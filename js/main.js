@@ -1951,7 +1951,7 @@ function initMatterPhysics() {
 
   // Link them loosely together for maximum flexibility
   Composites.chain(rope, 0, 0.5, 0, -0.5, {
-    stiffness: 0.9, // Higher stiffness like a real braided cord
+    stiffness: 1.0, // Fully rigid to prevent heavy bob bouncing
     length: 4 // Give joints plenty of room to rotate naturally
   });
 
@@ -2102,8 +2102,8 @@ function initMatterPhysics() {
       pointA: { x: localX, y: localY },
       bodyB: lastBody,
       pointB: { x: 0, y: segmentLength / 2 },
-      stiffness: 0.08, // Gentler tug resistance
-      damping: 0.08 // Slightly more damping so it doesn't jitter excessively
+      stiffness: 0.5, // Tighter pull for heavy bob
+      damping: 0.2 // Higher damping to prevent bounce so it doesn't jitter excessively
     });
 
     Composite.add(world, dragConstraint);
