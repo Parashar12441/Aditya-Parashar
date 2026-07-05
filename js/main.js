@@ -1844,11 +1844,11 @@ async function initLiveCounter() {
         duration: 2,
         ease: "power3.out",
         onUpdate: function () { 
-          counterEl.textContent = "+" + Math.round(this.targets()[0].val).toLocaleString(); 
+          counterEl.textContent = Math.round(this.targets()[0].val).toLocaleString() + "+"; 
         },
       });
     } else {
-      counterEl.textContent = "+" + data.count.toLocaleString();
+      counterEl.textContent = data.count.toLocaleString() + "+";
     }
   } catch (err) {
     console.error("Live Counter Error:", err);
