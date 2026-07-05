@@ -1852,7 +1852,7 @@ async function initLiveCounter() {
     }
   } catch (err) {
     console.error("Live Counter Error:", err);
-    counterEl.textContent = "N/A";
+    if (counterEl.parentElement) { counterEl.parentElement.style.display = 'none'; } else { counterEl.textContent = ''; }
   }
 }
 
