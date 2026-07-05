@@ -2016,14 +2016,42 @@ function initMatterPhysics() {
   
   // Gyroscope tilt support for mobile
   if (window.DeviceOrientationEvent) {
+    // Request permission for iOS 13+ on first interaction
+    const requestGyro = () => {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().catch(() => {});
+      }
+      document.body.removeEventListener('click', requestGyro);
+      document.body.removeEventListener('touchstart', requestGyro);
+    };
+    document.body.addEventListener('click', requestGyro, { once: true });
+    document.body.addEventListener('touchstart', requestGyro, { once: true });
+
     window.addEventListener('deviceorientation', function(event) {
       if (!engine || !engine.world) return;
-      const gamma = event.gamma; // left-to-right tilt in degrees
-      if (gamma !== null) {
-        let gravityX = gamma / 20; // Adjust sensitivity
-        if (gravityX > 1.8) gravityX = 1.8;
-        if (gravityX < -1.8) gravityX = -1.8;
+      
+      let tilt = 0;
+      // Handle orientation changes (portrait vs landscape)
+      if (window.orientation === 90) {
+        tilt = event.beta;
+      } else if (window.orientation === -90) {
+        tilt = -event.beta;
+      } else {
+        tilt = event.gamma;
+      }
+
+      if (tilt !== null && tilt !== undefined) {
+        let gravityX = tilt / 12; // High sensitivity for dramatic swing
+        if (gravityX > 3.0) gravityX = 3.0;
+        if (gravityX < -3.0) gravityX = -3.0;
         engine.world.gravity.x = gravityX;
+        
+        // Wake up sleeping bodies just in case
+        if (Matter.Composite && Matter.Body) {
+          Matter.Composite.allBodies(engine.world).forEach(b => {
+             Matter.Body.setAwake(b, true);
+          });
+        }
       }
     });
   }
