@@ -375,7 +375,7 @@ window.openImmersiveEvent = function (eventId) {
           
           ${mediaArray.length > 1 ? `
           <div id="gallery-dots" class="auto-slide-container absolute bottom-4 left-0 right-0 flex justify-center gap-3 z-20 pointer-events-auto opacity-100 transition-opacity duration-300">
-             ${mediaArray.map((_, i) => `<button type="button" aria-label="Go to slide ${i+1}" class="auto-slide-link w-2 h-2 rounded-full bg-white/30 cursor-pointer ${i === 0 ? 'is-active' : ''} focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none" onclick="document.getElementById('gallery-track').scrollTo({left: document.getElementById('gallery-track').clientWidth * ${i}, behavior: 'smooth'})"></button>`).join('')}
+             ${mediaArray.map((_, i) => `<button type="button" aria-label="Go to slide ${i + 1}" class="auto-slide-link w-2 h-2 rounded-full bg-white/30 cursor-pointer ${i === 0 ? 'is-active' : ''} focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none" onclick="document.getElementById('gallery-track').scrollTo({left: document.getElementById('gallery-track').clientWidth * ${i}, behavior: 'smooth'})"></button>`).join('')}
           </div>
           <div class="absolute top-4 left-4 z-20 pointer-events-none bg-black/40 backdrop-blur-md text-white/80 text-[10px] font-mono px-2 py-1 rounded-md border border-white/10 opacity-100 transition-opacity duration-300">
             SWIPE TO EXPLORE
@@ -1831,20 +1831,20 @@ function initSlidingNav() {
 async function initLiveCounter() {
   const counterEl = document.getElementById("visitCounter");
   if (!counterEl) return;
-  
+
   try {
     const response = await fetch("https://api.counterapi.dev/v1/aditya-parashar.vercel.app/visits/up");
     if (!response.ok) throw new Error("Failed to fetch count");
     const data = await response.json();
-    
+
     // Animate the counter using GSAP
     if (window.gsap) {
       gsap.to({ val: 0 }, {
         val: data.count,
         duration: 2,
         ease: "power3.out",
-        onUpdate: function () { 
-          counterEl.textContent = Math.round(this.targets()[0].val).toLocaleString() + "+"; 
+        onUpdate: function () {
+          counterEl.textContent = Math.round(this.targets()[0].val).toLocaleString() + "+";
         },
       });
     } else {
@@ -1998,7 +1998,7 @@ function initMatterPhysics() {
     ropeHandle.style.top = `${lastBody.position.y}px`;
 
     // Toggle logic
-    if (lastBody.position.y > 170 && !hasTriggered) {
+    if (lastBody.position.y > 160 && !hasTriggered) {
       hasTriggered = true;
       toggleTheme();
 
@@ -2013,13 +2013,13 @@ function initMatterPhysics() {
   });
 
   Runner.run(Runner.create(), engine);
-  
+
   // Gyroscope tilt support for mobile
   if (window.DeviceOrientationEvent) {
     // Request permission for iOS 13+ on first interaction
     const requestGyro = () => {
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().catch(() => {});
+        DeviceOrientationEvent.requestPermission().catch(() => { });
       }
       document.body.removeEventListener('click', requestGyro);
       document.body.removeEventListener('touchstart', requestGyro);
@@ -2027,9 +2027,9 @@ function initMatterPhysics() {
     document.body.addEventListener('click', requestGyro, { once: true });
     document.body.addEventListener('touchstart', requestGyro, { once: true });
 
-    window.addEventListener('deviceorientation', function(event) {
+    window.addEventListener('deviceorientation', function (event) {
       if (!engine || !engine.world) return;
-      
+
       let tiltX = 0;
       let tiltY = 0;
       // Handle orientation changes (portrait vs landscape)
@@ -2046,20 +2046,20 @@ function initMatterPhysics() {
 
       if (tiltX !== null && tiltY !== null) {
         // High sensitivity for dramatic swing.
-        let gravityX = tiltX / 12; 
+        let gravityX = tiltX / 12;
         let gravityY = tiltY / 30; // 90 degrees / 30 = 3.0 standard downward gravity
-        
+
         // Clamp to prevent breaking physics
         gravityX = Math.max(-4.0, Math.min(4.0, gravityX));
         gravityY = Math.max(-4.0, Math.min(4.0, gravityY));
 
         engine.world.gravity.x = gravityX;
         engine.world.gravity.y = gravityY;
-        
+
         // Wake up sleeping bodies just in case
         if (Matter.Composite && Matter.Body) {
           Matter.Composite.allBodies(engine.world).forEach(b => {
-             Matter.Body.setAwake(b, true);
+            Matter.Body.setAwake(b, true);
           });
         }
       }
@@ -2152,7 +2152,7 @@ function initMatterPhysics() {
 function playSwitchSound() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) return;
-  
+
   if (!window.audioCtx) {
     window.audioCtx = new AudioContext();
   }
@@ -2179,7 +2179,7 @@ function playSwitchSound() {
 
 function toggleTheme() {
   playSwitchSound();
-  
+
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (isLight) {
     document.documentElement.setAttribute('data-theme', 'dark');
