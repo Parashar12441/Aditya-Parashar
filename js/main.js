@@ -1974,6 +1974,8 @@ function initMatterPhysics() {
   const container = document.getElementById('theme-rope-container');
 
   let hasTriggered = false;
+  let isReady = false;
+  setTimeout(() => { isReady = true; }, 2000);
 
   // Sync physics loop to DOM
   Matter.Events.on(engine, 'afterUpdate', function () {
@@ -1998,7 +2000,7 @@ function initMatterPhysics() {
     ropeHandle.style.top = `${lastBody.position.y}px`;
 
     // Toggle logic
-    if (lastBody.position.y > 160 && !hasTriggered) {
+    if (isReady && lastBody.position.y > 160 && !hasTriggered) {
       hasTriggered = true;
       toggleTheme();
 
